@@ -1,0 +1,276 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+	function checkusn(){
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/username/" + $('#usn').val(),
+			success: function(response, status, error){
+				console.log("success")
+				$('#usn_inform').css("display","none");
+			},
+			error: function(response, status, error){
+				console.log("error")
+				$('#usn_inform').css("display","inline-block");
+				$('#usn').val("");
+			}
+		})
+	}
+
+	function strength(){
+		pwd = $('#pwd').val();
+		if(pwd.length<5){
+			$('#pwd_inform').css({"display":"inline-block","color":"red"})
+			$('#pwd_inform').html("Weak")
+			// $('#pwd_inform').fadeOut(2000)
+		}
+		else if(pwd.length>=5 && pwd.length<8){
+			$('#pwd_inform').css({"display":"inline-block","color":"#ffc107"})
+			$('#pwd_inform').html("Medium")
+			// $('#pwd_inform').fadeOut(2000)
+		}
+		else{
+			$('#pwd_inform').css({"display":"inline-block","color":"green"})
+			$('#pwd_inform').html("Strong")
+			$('#pwd_inform').fadeOut(2000)
+		}
+	}
+
+	function signup(){
+		var obj={}
+		if($('#usn').val()==="" || $('#pwd').val()==="" || $('#first').val()==="" || $('#last').val()==="")
+			$('#info').css("display","inline-block");
+		else{
+			var interest_arr=[];
+			$("input:checkbox[name=interest]:checked").each(function(){
+				interest_arr.push($(this).val())
+			});
+			// alert(interest_arr);
+			obj = {"username":$('#usn').val(),
+					"password":$('#pwd').val(),
+					"first_name":$('#first').val(),
+					"last_name":$('#last').val(),
+					"interest": interest_arr
+			}
+			//alert(obj.username+" "+obj.role);
+			if($('#teacher').is(":checked")){
+				obj1 = {"username": $('#usn').val()};
+				//alert("--------is a teacher??? box is checked--------")
+				$.ajax({
+				type: "GET",
+				url: "http://localhost:3000/api/v1/user/teacher/"+$('#usn').val(),
+				success: function(response, status, error){
+					console.log("is a teacher - ajax call");
+					obj.role= "Teacher";
+					$.ajax({
+						type: "POST",
+						url: "http://localhost:3000/api/v1/signup",
+						data: obj,
+						dataType: 'json',
+						success: function(response, status, error){
+							console.log("successful signup");
+							localStorage.setItem('username',obj['username'])
+							$('#info').css("display","none");
+							$('#usn_inform').css("display","none");
+							window.location = "dashboard.html";
+						},
+						error: function(response, status, error){
+							console.log(error);
+							$('#usn_inform').css("display","inline-block");
+						}
+					});
+					console.log(obj);
+				},
+				error: function(response, status, error){
+					console.log(error);
+					console.log("not teacher - ajax call");
+					alert("You are not recognized as a teacher, so you will be a student")
+					obj["role"] = "Student";
+					$.ajax({
+						type: "POST",
+						url: "http://localhost:3000/api/v1/signup",
+						data: obj,
+						dataType: 'json',
+						success: function(response, status, error){
+							console.log("successful signup");
+							localStorage.setItem('username',obj['username'])
+							$('#info').css("display","none");
+							$('#usn_inform').css("display","none");
+							window.location = "dashboard.html";
+						},
+						error: function(response, status, error){
+							console.log(error);
+							$('#usn_inform').css("display","inline-block");
+						}
+					});
+					console.log(obj);
+				}
+			});
+			}
+			else{
+			obj = {"username":$('#usn').val(),
+					"password":$('#pwd').val(),
+					"first_name":$('#first').val(),
+					"last_name":$('#last').val(),
+					"role": "Student",
+					"interest": interest_arr
+
+				};
+				$.ajax({
+						type: "POST",
+						url: "http://localhost:3000/api/v1/signup",
+						data: obj,
+						dataType: 'json',
+						success: function(response, status, error){
+							console.log("successful signup");
+							localStorage.setItem('username',obj['username'])
+							$('#info').css("display","none");
+							$('#usn_inform').css("display","none");
+							window.location = "dashboard.html";
+						},
+						error: function(response, status, error){
+							console.log(error);
+							$('#usn_inform').css("display","inline-block");
+						}
+					});
+			}
+			// $.ajax({
+			// 	type: "POST",
+			// 	url: "http://localhost:3000/api/v1/signup",
+			// 	data: obj,
+			// 	dataType: 'json',
+			// 	success: function(response, status, error){
+			// 		console.log("successful signup");
+			// 		localStorage.setItem('username',obj['username'])
+			// 		$('#info').css("display","none");
+			// 		$('#usn_inform').css("display","none");
+			// 		window.location = "dashboard.html";
+			// 	},
+			// 	error: function(response, status, error){
+			// 		console.log(error);
+			// 		$('#usn_inform').css("display","inline-block");
+			// 	}
+			// });
+		}
+	}
+</script>
+
+<style>
+body {
+	background-image: url("ggg.jpg");
+	/*background-color: aliceblue;*/
+}
+
+button{
+	box-shadow: 5px 5px 5px grey;
+}
+
+.divv{
+	background-color: black;
+	width: 60%;
+      height:750px;
+      margin: 0 auto;
+      border-radius: 10px;
+      opacity:0.7;
+      padding:25px;
+}
+
+/*td
+{
+    padding:0 0 0 15px;
+}*/
+</style>
+</head>
+<body>
+	<br/>
+	<div class="divv">
+
+ 	<h3 align="center" style="color:white;">Academic Discussion Forum </h3>
+    <h4 align = "center" style="color:white;"> SIGN UP </h4>
+	<form style="width: 100%;align-self: center;">
+		<span style="color:red;font-size:12px;position:relative;display:none;color:white;" id="info">Please fill in all the fields</span>
+		<div class="container" style="width:50%;">
+		<div class ="form-group">
+			<label for="exampleInputUsername1" style="color:white;">Username</label>
+    		<input type="text" class="form-control" id="usn" placeholder="Enter username" onblur="checkusn()">
+    		<span style="color:red;font-size:12px;display:none;color:white;" id="usn_inform">Username already exists
+		</span>
+  		</div>
+  		<div class="form-group">
+    		<label for="exampleInputPassword1" style="color:white;">Password</label>
+    		<input type="password" class="form-control" id="pwd" placeholder="Password" onkeyup="strength()">
+    		<span style="color:red;font-size:12px;display:none;" id="pwd_inform">Weak
+		</span>
+  		</div>
+  		<div class="form-group">
+  			<label for="exampleInputFirstname1" style="color:white;">First Name</label>
+  			<input type="firstname" class="form-control" id="first" placeholder="First Name">
+  		</div>
+  		<div class="form-group">
+  			<label for="exampleInputLastname1" style="color:white;">Last Name</label>
+  			<input type="lastname" class="form-control" id="last" placeholder="Last Name">
+  		</div>
+  		<div class="form-group">
+  			<span for="exampleInputLastname1" style="color:white;">Are you a teacher: </span>
+  			<input style="" id="teacher" type="checkbox"> 
+  			<span style="color:white;"> Yes</span>
+  		</div>
+  		<!-- <span style="">Are you a teacher: </span> -->
+  		<!-- <input style="" id="teacher" type="checkbox">  -->
+		<!-- <span style=""> Yes</span></br> -->
+		<h4 style="color:white;"> Pick your Interests! </h4><br/>
+		<table ><tr><td>
+		<div class="form-group"> 			
+  			<input style="" name="interest" type="checkbox" value="MachineLearning">
+  			<label for="exampleInputLastname1" style="color:white;">Machine Learning</label>
+  		</div></td><td>
+  		<div class="form-group">
+  			<input style="" name="interest" type="checkbox" value="DataScience">
+  			<label for="exampleInputLastname1" style="color:white;">Data Science</label>
+  		</div></td></tr><tr><td>
+  		<div class="form-group">
+  			<input style="" name="interest" type="checkbox" value="BigData">
+  			<label for="exampleInputLastname1" style="color:white;">Big Data</label>
+  		</div></td><td>
+  		<div class="form-group">
+  			<input style="" name="interest" type="checkbox" value="DataAnalytics">
+  			<label for="exampleInputLastname1" style="color:white;">Data Analytics</label>
+  		</div></td></tr><tr><td>
+  		<div class="form-group">
+  			<input style="" name="interest" type="checkbox" value="WebTechnology">
+  			<label for="exampleInputLastname1" style="color:white;">Web Technologies</label>
+  		</div></td></tr></table>
+		<!-- <input style="" name="interest" type="checkbox" value="ML">ML</br>
+		<input style="" name="interest" type="checkbox" value="Cloud">Cloud</br>
+		<input style="" name="interest" type="checkbox" value="BigData">Big Data</br> 
+		<input style="" name="interest" type="checkbox" value="DesignPatterns">Design Patterns</br>
+		<input style="" name="interest" type="checkbox" value="WebTech">Web Technologies</br> -->
+		<button style=""onclick="signup();return false;" class="btn btn-primary">Sign up</button>
+	</form>
+	</div><br/></body>
+</html>
+		
+
+		<!-- <input style="position:relative;top:8px;" id="usn" type="text" placeholder="Username" value="" onblur="checkusn()">
+		<span style="color:red;font-size:12px;position:relative;left:8px;top:8px;display:none;" id="usn_inform">Username already exists
+		</span></br>
+		<input style="position:relative;top:16px;" id="pwd" type="password" placeholder="Password" value="" onkeyup="strength()">
+		<span style="color:red;font-size:12px;position:relative;left:8px;top:16px;display:none;" id="pwd_inform">Weak
+		</span></br>
+		<input style="position:relative;top:24px;" id="first" type="text" placeholder="First Name" value=""></br>
+		<input style="position:relative;top:32px;" id="last" type="text" placeholder="Last Name" value=""></br>
+		<span style="position:relative;top:40px;">Are you a teacher: </span>
+		<input style="position:relative;top:40px;" id="teacher" type="checkbox"> 
+		<span style="position:relative;top:40px;"> Yes</span></br>
+		<button style="position:relative;top:48px;"onclick="signup();return false;">Sign up</button>
+	</form>
+</body>
+</html> -->

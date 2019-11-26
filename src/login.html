@@ -1,0 +1,99 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+        function checkUsername(){
+		username = $('#name').val();
+		password = $('#pwd').val();
+		if(username===""){
+			$('#msg').html('Please enter your username');
+			$('#msg').css("display","block")
+			$('#msg').fadeOut(3000)
+		}
+		else if(password===""){
+			$('#msg').html('Please enter your password');
+			$('#msg').css("display","block")
+			$('#msg').fadeOut(3000)
+		}
+		else{
+			$.ajax({
+				type: "POST",
+				url: "http://localhost:3000/api/v1/login",
+				data: {"username": username, "password": password},
+				dataType: 'json',
+				success: function(response, status, error){
+					console.log("successful login");
+					localStorage.setItem('username',username)
+					window.location = "dashboard.html";
+				},
+				error: function(response, status, error){
+					console.log(error);
+					$('#msg').html('Username and password do not match. Try again.');
+					$('#msg').css("display","block")
+					$('#msg').fadeOut(3000)
+				}
+			})
+		}
+	}
+	function redirect(){
+		window.location = "signup.html"
+	}
+</script>
+</head>
+<style>
+body {
+ background-image: url("ggg.jpg");
+
+  /*background-color: aliceblue;*/
+}
+
+.divv{
+	background-color: black;
+	width: 30%;
+      height:500px;
+      margin: 0 auto;
+      border-radius: 10px;
+      opacity:0.7;
+      padding:15px;
+}
+
+button{
+	box-shadow: 5px 5px 5px grey;
+}
+
+</style>
+<body>
+<br/><br/><br/>
+<div class="divv" >
+
+  <h3 align="center" style="color:white;">Academic Discussion Forum </h3>
+    <h4 align = "center" style="color:white;"> LOGIN </h4>
+		
+		 <div class="container" style="width:50%;">
+		 	<span id="msg" style="color:red;font-size:12px;display:none;">Username and password do not match. Try again.</span></br>
+	<form>
+	 <div class="form-group" style="opacity:1;">
+    <label for="exampleInputUsername1" style="color:white;">Username</label>
+    <input type="text" class="form-control abc" id="name" placeholder="Enter username">
+  </div>
+  <div class="form-group">
+    <label for="exampleInputPassword1" style="color:white;">Password</label>
+    <input type="password" class="form-control" id="pwd" placeholder="Enter Password">
+  </div>
+  <button onclick = "checkUsername(); return false;" class="btn btn-primary">Log in</button>
+  <!-- <button type="submit" class="btn btn-primary">Submit</button> -->
+</form>
+<span style="font-size:18px;color:white;">Don't have an account? Create one now! </span></br>
+	<button style="position:relative;top:10px;" onclick="redirect()" class="btn btn-primary">Sign up</button>
+</div>
+<div>
+</body>
+</html>
+

@@ -1,0 +1,401 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+	background-image: url("ggg.jpg");
+	/*background-color: aliceblue;*/
+}
+
+.topnav {
+  overflow: hidden;
+  background-color: #333;
+  height:30px;
+}
+
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  width:25%;
+  /*padding: 14px 148px;*/
+  text-decoration: none;
+  font-size: 17px;
+  height:30px;
+}
+
+.topnav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.answer{
+	background-color: white;
+	border-radius: 15px;
+	padding: 15px;
+}
+
+.comm{
+	text-align: left;
+	color: Darkgray;
+	font-weight: bold;
+}
+
+button{
+	box-shadow: 5px 5px 5px grey;
+}
+</style>
+
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<style>
+	.username{
+		font-size:12px;
+	}
+</style>
+<center>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+// Add correct answers
+// Add upvote for q and a
+// Adding comments
+// Adding answers
+// delete answer
+// reporting answers
+	question_user="";
+	question_id = 1;
+	question_closed=false;
+	updateans = [1]
+	function closed(){ //
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/questions/closed/" + question_id,
+			success: function(response, status, error){
+				console.log("question open")
+				question_closed = false;
+			},
+			error: function(response, status, error){
+				console.log("error")
+				question_closed = true;
+			}
+		})
+	}
+
+	function correct(id){ //
+		console.log("picking right answer "+id)
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/correct",
+			data: {"aid":id , "qid": question_id},
+			dataType: 'json',
+			success: function(response, status, error){
+				console.log("answer picked")
+				question_closed = true;				
+				loadA(question_id);
+			},
+			error: function(response, status, error){
+				window.alert("questions already has a correct answer");
+			}
+		})
+	}
+
+	function chooseAnswer(){ //
+		user = localStorage.getItem("username")
+		// console.log(question_user + "http://localhost:3000/api/v1/user/role/" + question_user)
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/user/role/" + user,
+			success: function(response, status, error){
+				console.log(response["role"],"abc")
+				if(response["role"]=='Teacher' || response['role']=='Moderator' || question_user==user){
+					$('#answers').children('div').each(function(){
+					    // console.log(this); // "this" is the current element in the loop
+					    temp = '<button class="btn btn-success" onclick="correct('+ this.id+')" style="float:right">Pick this as right answer</button>'
+					    $(this).prepend(temp)
+					});
+				}
+			},
+			error: function(response, status, error){
+				console.log("error")
+			}
+		})
+	}
+
+	function postAnswer(){ 
+		console.log("success got total")
+		aid = new Date().getMilliseconds()
+		qid = question_id;
+		ans = $('#newans').val();
+		anstype = $('#anstype').val();
+		$('#anstype').val("");
+		$('#newans').val("");
+		username = localStorage.getItem("username")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/answers",
+			data: {"aid": aid, "qid": qid, "answer": ans, "answerType":anstype,"username":username},
+			dataType: 'json',
+			success: function(response, status, error){
+				console.log("answer posted");
+				loadA(question_id)
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})
+	}
+
+	function postComment(ansid){ 
+		aid = ansid;
+		updateans[0]=ansid
+		console.log("success got total")
+		cid = new Date().getMilliseconds()
+		comment = $('#newcom').val();
+		
+		username = localStorage.getItem("username")
+		console.log(comment,cid,aid,username)
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/comments",
+			data: {"cid": cid, "aid": aid, "comment": comment, "username":username},
+			dataType: 'json',
+			success: function(response, status, error){
+				console.log("comment posted");
+				$('#newcom').val("");
+				loadC(updateans)
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})
+	}
+
+	function upvote(id){
+		$.ajax({
+				type: "POST",
+				url: "http://localhost:3000/api/v1/answers/upvote",
+				data: {"aid": id},
+				dataType: 'json',
+				success: function(response, status, error){
+					console.log("successful Upvote");
+					$('#button'+id).html("Upvote: "+response["upvotes"])
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function deleteAns(aid){
+		$.ajax({
+			type: "DELETE",
+			url: "http://localhost:3000/api/v1/answers/" + aid,
+			success: function(response, status, error){
+				console.log("success in deletion")
+				loadA(question_id);
+			},
+			error: function(response, status, error){
+				console.log("error")
+			}
+		})
+	}
+
+	function loadC(ansids){
+		for(i in ansids){
+			$.ajax({
+				type: "GET",
+				url: "http://localhost:3000/api/v1/comments/" +ansids[i],
+				success: function(response, status, error){
+					id = '#'+ this.url.substring(this.url.lastIndexOf('/')+1)
+					if(error.status!=204){
+						if($(id +' .comments').length){
+							$(id +' .comments').remove()
+						}
+						temp='<div class=comments><p style="text-align:left;"><b>COMMENTS</b></p>'
+						for(i in response){
+							temp+='<div class=comment>'
+							temp+="<p class='comm'>";
+							temp+=response[i]['comment']
+							temp+='                                                <span class="username">'+response[i]['username']+'</span></div>'
+							temp+='</p>'
+						
+						}
+						temp+='<textarea rows="1" cols="100%" id="newcom" placeholder="Type your comment here"></textarea>'
+						temp+='<br></br><button onclick=postComment('+this.url.substring(this.url.lastIndexOf('/')+1)+') class="btn btn-primary" >Post Comment</button><br></br>'
+						temp+='</div>'
+						// id = '#'+ansids[i]
+						// console.log($('#'+ this.url.substring(this.url.lastIndexOf('/')+1)))
+						$(id).append(temp)
+					}
+					else{
+						temp='<div class=comments>'
+						temp+='<textarea rows="1" cols="100%" id="newcom" placeholder="Type your comment here"></textarea>'
+						temp+='<br></br><button onclick=postComment('+this.url.substring(this.url.lastIndexOf('/')+1)+') class="btn btn-primary" >Post Comment</button><br></br>'
+						temp+='</div>'
+						// id = '#'+ansids[i]
+						// console.log($('#'+ this.url.substring(this.url.lastIndexOf('/')+1)))
+						$(id).append(temp)
+					}
+				},
+				error: function(response, status, error){
+					console.log("error")
+				}
+			})
+		}
+	}
+
+	function loadA(qid){
+		ansids=[]
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/answers/"+qid,
+			success: function(response, status, error){
+				if($('#answers').length){
+					$('#answers').remove()
+					ansids = [];
+				}
+				temp="<div class='container' width=50% style='opacity:0.8;'>"
+				temp+='<div class=answers id=answers>'
+				// console.log(response)
+				// console.log(error)
+				keys=[]
+				for(i in response)
+					keys.push(i)
+				for(i = keys.length-1;i>=0;i--){
+					id = parseInt(i)+1
+					temp+='<p align=center><div style="box-shadow: 5px 5px 5px grey;" class=answer id='+response[i]['id']+'>'
+
+					ansids.push(response[i]['id'])
+
+					if(question_closed == true){
+						if(response[i]['correct']==1){
+							temp += '<p><image style="width:40px;float:right;" src="tick.jpg"></image>'
+						}
+					}
+					if(response[i]['type']=='text'){
+						temp+="<p align=center><h4>";
+						temp+=response[i]['answer']
+						temp+='</h4></p>'
+					}
+					else if(response[i]['type']=='image'){
+						temp+="<br></br><image style='width:50%;height:30%' src="+response[i]['answer']+"></br>";
+					}
+					else{
+						temp+="<br></br><iframe style='width:50%;height:30%' src="+response[i]['answer']+">";
+						temp+="</iframe></br>"
+					}
+				    temp+='<span class="username">              '+response[i]['username']+'</span></p>'
+
+					temp+='<p align=center>'+'<button id = "button'+response[i]['id']+'" class="btn btn-success" onclick="upvote('+response[i]['id']+')">Upvote: '+response[i]['upvotes']+'</button> '
+					if(localStorage.getItem("username")==response[i]['username'])
+						temp+='<button onclick="deleteAns('+response[i]['id']+')" class="btn btn-danger">Delete</button>'+'</p>'
+					temp+= '</div><br></br>'
+				}
+				temp+='</br><textarea rows="4" cols="100%" id="newans" placeholder="Type your answer here"></textarea></br></br>'
+				temp+='<input type="text" id="anstype" placeholder="text/image/video?"></input></br></br>'
+				temp+='<button onclick=postAnswer() class="btn btn-primary">Post Answer</button>'
+				temp+='</div></div>'
+				$('#post').append(temp)
+				if(question_closed==false)
+					chooseAnswer()
+				// else
+				// 	showRightAnswer();
+
+				loadC(ansids)
+			},
+			error: function(response, status, error){
+				console.log("error")
+			}
+		})
+	}
+
+
+	function loadQ(){
+		questionforaayu=""
+		question_id = localStorage.getItem("qid")
+		$('#welcome').html("Hi "+localStorage.getItem("username")+", Signout")
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/question/"+question_id,
+			success: function(response, status, error){
+				console.log(response)
+				questionforaayu=response['question']
+				//alert(questionforaayu)
+				temp="<p><h3 style='color:white'>";
+				temp+=response['question']
+				temp+='<span class="username">        '+response['username']+'</span>'
+				temp+='</p></h3>'
+
+				question_user = response['username']
+				// console.log(question_user)
+				$('#question').html(temp);
+				closed();
+				loadA(question_id);
+				questionforaayu1= questionforaayu.toLowerCase();
+				//alert(questionforaayu1)
+		urll = encodeURI('http://localhost:5000/intel_comp/'+questionforaayu1.substring(0, questionforaayu1.length - 1)) //only for test
+		//alert(urll)
+		//intel
+		$.ajax({
+			type: "GET",
+			url: urll,
+			crossDomain: true,
+			success: function(response, status, error){
+				//alert(response['data'])
+				$('#intel').html(response['data']+"?");
+			},
+			error: function(response, status, error){
+				console.log("error")
+			}
+		})
+			},
+			error: function(response, status, error){
+				console.log("error")
+			}
+		})
+	}
+
+	function signout(){
+		console.log("signing out")
+		localStorage.removeItem("username");
+		localStorage.removeItem("qid");
+		window.location="login.html"
+	}
+</script>
+</head>
+<style>
+body {
+	background-color: aliceblue;
+}
+</style>
+<body onload="loadQ()">
+<div class="topnav">
+  <a  href="dashboard.html">Dashboard</a>
+  <a href="#news">About</a>
+  <a href="#contact">Contact</a>
+  <a href="" id="welcome" onclick="signout();return false;">Signout</a>
+</div> 
+     <div id="post">
+		<div id="question"></div>
+     </div>
+     
+     	<p style="color:white;"> Here is a question similar to what you have asked! </p>
+     	<div style="color:white;" id="intel">
+</div>
+ </center>
+</body>
+</html>

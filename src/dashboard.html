@@ -1,0 +1,491 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<style>
+
+body {
+	background-image: url("ggg.jpg");
+	/*background-color: aliceblue;*/
+}
+
+.topnav {
+  overflow: hidden;
+  background-color: #333;
+  height:30px;
+}
+
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  width:25%;
+  /*padding: 14px 148px;*/
+  text-decoration: none;
+  height:30px;
+  font-size: 17px;
+}
+
+.topnav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+.dropbtn {
+  background-color: black;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: black;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content button {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content button:hover {background-color: grey}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown:hover .dropbtn {
+  background-color: black;
+}
+
+#gotta{
+	background-color:white;
+	padding:15px;
+	box-shadow: 5px 5px 5px grey;
+	border-radius: 10px;
+	opacity:0.8;
+}
+
+button{
+	box-shadow: 5px 5px 5px grey;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+	
+	var temp=""
+	function pick(){
+		console.log($('#pickup').html())
+		$('#quesdom').val($('#pickup').html());
+		$('#suggestions').css('display','none')
+	}
+
+	function show_suggestions(){
+		ques = $('#newques').val();
+		req = {}
+		req.sentence = ques;
+		//alert(ques);
+		$.ajax({
+				type: "POST",
+				url: "http://localhost:3000/api/v1/intel_2",
+				data: req,
+				dataType: 'json',
+				success: function(response, status, error){
+					$('#suggestions').html('<h6>Some suggestions</h6><p id="pickup">'+response["data"]+"</p><button class='btn btn-success' onclick='pick()'>Use this</button>");
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function goto(qid){
+		console.log("goto")
+		localStorage.setItem('qid',qid);
+		window.location= "answers.html"
+	}
+
+	function renderQues(arr){
+		console.log(arr.length)
+		var ans = {"interests": arr}
+		$.ajax({
+				type: "POST",
+				url: "http://localhost:3000/api/v1/questions/interests",
+				data: ans,
+				dataType: 'json',
+				success: function(response, status, error){
+					temp+="<div style='padding:20px' class='allques'><h3 style='color:white;text-shadow: 5px 5px 5px grey;'>"+"Questions that might interest you!"+"</h3><br/>"
+            		for(var k in response)
+            		{
+            			var keyjson = response[k];
+						temp+="<div id='gotta' class='quest' onclick='goto("+k+")'><table><tr><td><h5>"+keyjson[4]+"</h5></td><td><h7>["+keyjson[1]+"]</h7></td></tr></table><p style='color:gray;'>"+keyjson[0]+"</p><br/><br/>"
+						 temp+="<button onclick='upvote(event,"+k+")' class='btn btn-success'> Upvote: "+keyjson[3]+"</button> "
+						 if(localStorage.getItem("username")==keyjson[1])
+            				temp+="<button onclick='delQues(event,"+k+")' class='btn btn-danger' > Delete</button>"
+            			temp+="<span style='text-align:right;float:right;color:gray'>"+keyjson[5]+"</span>"
+            			temp+="</div></br>"
+            		}
+            		temp+="</br><button onclick='restQues()' class='btn btn-primary'> LOAD MORE </button></div>"
+					$('#render').html(temp)
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function upvote(e,qid){
+		console.log("e")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/upvote",
+			data: {"qid": qid},
+			dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				getInterests();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function upvote2(e,qid){
+		console.log("d")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/upvote",
+			data: {"qid": qid},
+			dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				restQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function upvote3(e,qid){
+		console.log(e,qid)
+		console.log("b")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/upvote",
+			data: {"qid": qid},
+			dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				upvQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function upvote4(e,qid){
+		console.log("a")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/upvote",
+			data: {"qid": qid},
+			dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				timeQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function upvote5(e,qid){
+		console.log("c")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions/upvote",
+			data: {"qid": qid},
+			dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				staQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function restQues(){
+	temp=""
+	$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/questions/noninterests",
+			crossDomain: true,
+			success: function(response, status, error){
+					temp+="<div style='padding:20px' class='allques'><h3 style='color:white;text-shadow: 5px 5px 5px grey;'>"+"Questions that might interest you!"+"</h3><br/>"
+            		
+            		for(var k in response)
+            		{
+            			var keyjson = response[k];
+						temp+="<div id='gotta' class='quest' onclick='goto("+k+")'><table><tr><td><h5>"+keyjson[4]+"</h5></td><td><h7>["+keyjson[1]+"]</h7></td></tr></table><p style='color:gray;'>"+keyjson[0]+"</p><br/><br/>"
+						 temp+="<button onclick='upvote2(event,"+k+")' class='btn btn-success'> Upvote: "+keyjson[3]+"</button> "
+						 if(localStorage.getItem("username")==keyjson[1])
+            				temp+="<button onclick='delQues(event,"+k+")' class='btn btn-danger' > Delete</button>"
+            			temp+="<span style='text-align:right;float:right;color:gray'>"+keyjson[5]+"</span>"
+            			temp+="</div></br>"
+            		}
+            		temp+="</div></br>"
+					$('#render').html(temp)
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function upvQues(){
+	temp=""
+	$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/questions/upvotes",
+			crossDomain: true,
+			success: function(response, status, error){
+					
+					temp+="<div style='padding:20px' class='allques'><h3 style='color:white;text-shadow: 5px 5px 5px grey;'>"+"Questions based on highest upvotes!"+"</h3><br/>"
+            		for(var k in response)
+            		{
+            			var keyjson = response[k];
+						temp+="<div id='gotta' class='quest' onclick='goto("+k+")'><table><tr><td><h5>"+keyjson['question']+"</h5></td><td><h7>["+keyjson['username']+"]</h7></td></tr></table><p style='color:gray;'>"+keyjson['domain']+"</p><br/><br/>"
+						 temp+="<button onclick='upvote2(event,"+k+")' class='btn btn-success'> Upvote: "+keyjson['upvotes']+"</button> "
+						 if(localStorage.getItem("username")==keyjson['username'])
+            				temp+="<button onclick='delQues(event,"+k+")' class='btn btn-danger' > Delete</button>"
+            			temp+="<span style='text-align:right;float:right;color:gray'>"+keyjson['created']+"</span>"
+            			temp+="</div></br>"
+            		}
+            		temp+="</div></br>"
+					$('#render').html(temp)
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function timeQues(){
+	temp=""
+	$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/questions/time",
+			crossDomain: true,
+			success: function(response, status, error){
+					
+					temp+="<div style='padding:20px' class='allques'><h3 style='color:white;text-shadow: 5px 5px 5px grey;'>"+"Questions sorted from most recent!"+"</h3><br/>"
+            		for(var k in response)
+            		{
+            			var keyjson = response[k];
+						temp+="<div id='gotta' class='quest' onclick='goto("+k+")'><table><tr><td><h5>"+keyjson['question']+"</h5></td><td><h7>["+keyjson['username']+"]</h7></td></tr></table><p style='color:gray;'>"+keyjson['domain']+"</p><br/><br/>"
+						 temp+="<button onclick='upvote2(event,"+k+")' class='btn btn-success'> Upvote: "+keyjson['upvotes']+"</button> "
+						 if(localStorage.getItem("username")==keyjson['username'])
+            				temp+="<button onclick='delQues(event,"+k+")' class='btn btn-danger' > Delete</button>"
+            			temp+="<span style='text-align:right;float:right;color:gray'>"+keyjson['created']+"</span>"
+            			temp+="</div></br>"
+            		}
+            		temp+="</div></br>"
+					$('#render').html(temp)
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+
+	function delQues(e,qid){
+		$.ajax({
+			type: "DELETE",
+			url: "http://localhost:3000/api/v1/questions/"+qid,
+			//data: {"qid": qid},
+			//dataType: 'json',
+			crossDomain: true,
+			success: function(response, status, error){
+				console.log(response)
+				restQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})	
+		e.stopPropagation()	
+	}
+
+	function staQues(){
+	temp=""
+	$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/questions/state",
+			crossDomain: true,
+			success: function(response, status, error){
+					
+					temp+="<div style='padding:20px' class='allques'><h3 style='color:white;text-shadow: 5px 5px 5px grey;'>"+"Questions with verified answers"+"</h3><br/>"
+            		for(var k in response)
+            		{
+            			var keyjson = response[k];
+						temp+="<div id='gotta' class='quest' onclick='goto("+k+")'><table><tr><td><h5>"+keyjson['question']+"</h5></td><td><h7>["+keyjson['username']+"]</h7></td></tr></table><p style='color:gray;'>"+keyjson['domain']+"</p><br/><br/>"
+						 temp+="<button onclick='upvote2(event,"+k+")' class='btn btn-success'> Upvote: "+keyjson['upvotes']+"</button> "
+						 if(localStorage.getItem("username")==keyjson['username'])
+            				temp+="<button onclick='delQues(event,"+k+")' class='btn btn-danger' > Delete</button>"
+            			temp+="<span style='text-align:right;float:right;color:gray'>"+keyjson['created']+"</span>"
+            			temp+="</div></br>"
+            		}
+            		temp+="</div></br>"
+					$('#render').html(temp)
+				},
+				error: function(response, status, error){
+					console.log(error);
+				}
+			})
+	}
+
+	function getInterests(){
+		temp=""
+		var username=localStorage.getItem("username")
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:3000/api/v1/interests/"+username,
+			success: function(response, status, error){
+				console.log(response)
+				var arr=[];
+				for(var k in response){
+					arr.push(k);
+				}
+				console.log(arr);
+				renderQues(arr);
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})
+	}
+
+	function postQuestion(){
+		qid = new Date().getMilliseconds();
+		ques = $('#newques').val();
+		domain = $('#quesdom').val();
+		$('#quesdom').val("");
+		$('#newques').val("");
+		
+		username = localStorage.getItem("username")
+		$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/api/v1/questions",
+			data: {"qid": qid,"domain":domain, "question": ques, "username":username},
+			dataType: 'json',
+			success: function(response, status, error){
+				console.log("answer posted");
+				restQues();
+			},
+			error: function(response, status, error){
+				console.log(error);
+			}
+		})
+	}
+
+	window.onload = function() {
+		$('#welcome').html("Hi "+localStorage.getItem("username")+", Signout")
+		$('#personalise').html("Personalise for "+localStorage.getItem("username"))
+  		getInterests();
+	};
+
+	function signout(){
+		console.log("signing out")
+		localStorage.removeItem("username");
+		localStorage.removeItem("qid");
+		window.location="login.html"
+	}
+</script>
+</head>
+<body>
+	<div class="topnav">
+  <a  href="dashboard.html">Dashboard</a>
+  <a href="#news">About</a>
+  <a href="#contact">Contact</a>
+  <a href="#about" id="welcome" onclick="signout();return false;">Signout</a>
+</div>
+</br>
+<table><tr>
+	<td><button onclick="getInterests()" class="btn btn-info" id="personalise"> </button></td>
+	<td><div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Sort by
+  </button>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <a class="dropdown-item" onclick="timeQues()">TimeStamp</a>
+    <a class="dropdown-item" onclick="upvQues()">Upvotes </a>
+    
+  </div>
+</div>
+</td>
+	<td><div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    FilterBy
+  </button>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <a class="dropdown-item" onclick="staQues()">Status </a>
+    
+  </div>
+</div>
+</td>
+</tr></table>
+
+<br/><br/>
+<div style="padding:15px;">
+<div style='padding:20px;background-color: white;opacity:0.8; border-radius: 5px;box-shadow: 5px 5px 5px grey;' class='allques'><h4 style="text-shadow: 5px 5px 5px grey;">POST A QUESTION</h4><br/><textarea rows="4" cols="100%" onblur = "show_suggestions()" id="newques" placeholder="Type your question here"></textarea></br></br>
+	<div id = "suggestions" style="float:right;width: 20%;
+    height: 20%;
+    text-align: center;"></div>
+<input type="text" id="quesdom" placeholder="Type domain here"></input></br></br>
+
+<button onclick="postQuestion()" style="box-shadow: 5px 5px 5px grey;" class="btn btn-primary">Post Question</button><br/><br/>
+</div></div>
+
+	<div id="render">
+	</div>
+</body>
+</html>
+
