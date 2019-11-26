@@ -1,0 +1,16 @@
+can data science deal with structured and unstructured data
+delete is used to remove the outliers
+will using truncate help in making the data set better
+machine learning is a subset of AI
+is random forest also included into types of machine learning
+so neural networks are a set of algorithms
+does web technology also include javascript
+is the full form of sql structured query language
+is cleansing also included into data analytics
+is data science or data analytics better
+does big data deal with structured and unstructured data
+is map reduce only used to make processing faster
+is machine learning useful for any problem
+is machine learning the new big thing
+What is Web Development
+What is Web Development
